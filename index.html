@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="pl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="robots" content="noindex, nofollow">
+<meta name="referrer" content="no-referrer">
+<title>Badanie dotyczące postrzegania systemów automatycznego podejmowania decyzji</title>
+<style>
+  :root {
+    --bg: #f5f6f8;
+    --card: #ffffff;
+    --text: #1f2933;
+    --muted: #5b6672;
+    --accent: #2563eb;
+    --border: #e1e5ea;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #14181d;
+      --card: #1d232a;
+      --text: #e6eaee;
+      --muted: #9aa5b1;
+      --accent: #6ea0ff;
+      --border: #2d353e;
+    }
+  }
+  * { box-sizing: border-box; }
+  html, body { height: 100%; margin: 0; }
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 16px;
+  }
+  main {
+    width: 100%;
+    max-width: 520px;
+    background: var(--card);
+    border: 1px solid var(--border);
+    border-radius: 12px;
+    padding: 32px 28px;
+    text-align: center;
+  }
+  h1 {
+    font-size: 1.15rem;
+    line-height: 1.4;
+    margin: 0 0 20px;
+    font-weight: 600;
+  }
+  p { margin: 0 0 16px; color: var(--muted); line-height: 1.5; font-size: 0.95rem; }
+  .spinner {
+    width: 28px; height: 28px;
+    margin: 0 auto 18px;
+    border: 3px solid var(--border);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.9s linear infinite;
+  }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  @media (prefers-reduced-motion: reduce) { .spinner { animation: none; } }
+  a.button {
+    display: inline-block;
+    padding: 10px 20px;
+    border-radius: 8px;
+    background: var(--accent);
+    color: #fff;
+    text-decoration: none;
+    font-size: 0.95rem;
+    font-weight: 500;
+  }
+  .small { font-size: 0.82rem; margin-top: 18px; margin-bottom: 0; }
+  [hidden] { display: none !important; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Badanie dotyczące postrzegania systemów automatycznego podejmowania decyzji</h1>
+
+  <div id="redirecting">
+    <div class="spinner" aria-hidden="true"></div>
+    <p>Trwa przekierowanie do ankiety w Microsoft Forms…</p>
+    <p><a id="fallbackLink" class="button" href="#" rel="noreferrer" hidden>Przejdź do ankiety teraz</a></p>
+  </div>
+
+  <noscript>
+    <p>Aby przejść do ankiety, włącz obsługę JavaScript w przeglądarce i odśwież tę stronę.</p>
+  </noscript>
+
+  <p class="small">Ta strona nie zbiera żadnych danych — wyłącznie kieruje do ankiety w Microsoft Forms.</p>
+</main>
+
+<script>
+(function () {
+  "use strict";
+
+  // Cztery formularze w ustalonej kolejności: F1, F2, F3, F4.
+  // (F1 = governance wysoka / opacity przejrzysty, F2 = wysoka / nieprzejrzysty,
+  //  F3 = niska / przejrzysty, F4 = niska / nieprzejrzysty.)
+  var LINKS = [
+    "https://forms.cloud.microsoft/r/upr4Cey29S",
+    "https://forms.cloud.microsoft/r/2R5WqRZRG1",
+    "https://forms.cloud.microsoft/r/BW4qtJ2FsZ",
+    "https://forms.cloud.microsoft/r/fk9PfVcvMj"
+  ];
+
+  var STORAGE_KEY = "ankieta_przydzial";
+  var REDIRECT_DELAY_MS = 7000;
+
+  // Losowanie bez obciążenia: 256 jest podzielne przez 4.
+  function drawIndex() {
+    try {
+      if (window.crypto && window.crypto.getRandomValues) {
+        var buf = new Uint8Array(1);
+        window.crypto.getRandomValues(buf);
+        return buf[0] % LINKS.length;
+      }
+    } catch (e) { /* przejście do Math.random */ }
+    return Math.floor(Math.random() * LINKS.length);
+  }
+
+  function readStored() {
+    try {
+      var raw = window.localStorage.getItem(STORAGE_KEY);
+      if (raw === null) return null;
+      var n = parseInt(raw, 10);
+      if (n >= 0 && n < LINKS.length) return n;
+    } catch (e) { /* localStorage niedostępny */ }
+    return null;
+  }
+
+  function writeStored(n) {
+    try { window.localStorage.setItem(STORAGE_KEY, String(n)); } catch (e) { /* ignoruj */ }
+  }
+
+  var idx = readStored();
+  if (idx === null) {
+    idx = drawIndex();
+    writeStored(idx);
+  }
+  var target = LINKS[idx];
+
+  var fallbackLink = document.getElementById("fallbackLink");
+  fallbackLink.href = target;
+  fallbackLink.hidden = false;
+
+  setTimeout(function () {
+    window.location.replace(target);
+  }, REDIRECT_DELAY_MS);
+})();
+</script>
+</body>
+</html>
